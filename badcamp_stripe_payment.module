@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * @file
+ * Contains badcamp_stripe_payment.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function badcamp_stripe_payment_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the badcamp_stripe_payment module.
+    case 'help.page.badcamp_stripe_payment':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Provides integration of the Stripe payment processing service by providing a charging and refund service as well as an entity that will store the payment data for each payment made.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function badcamp_stripe_payment_theme() {
+  $theme = [];
+  $theme['stripe_payment'] = array(
+    'render element' => 'elements',
+    'file' => 'stripe_payment.page.inc',
+    'template' => 'stripe_payment',
+  );
+  $theme['stripe_payment_content_add_list'] = [
+    'render element' => 'content',
+    'variables' => ['content' => NULL],
+    'file' => 'stripe_payment.page.inc',
+  ];
+  return $theme;
+}
+
+/**
+* Implements hook_theme_suggestions_HOOK().
+*/
+function badcamp_stripe_payment_theme_suggestions_stripe_payment(array $variables) {
+  $suggestions = array();
+  $entity = $variables['elements']['#stripe_payment'];
+  $sanitized_view_mode = strtr($variables['elements']['#view_mode'], '.', '_');
+
+  $suggestions[] = 'stripe_payment__' . $sanitized_view_mode;
+  $suggestions[] = 'stripe_payment__' . $entity->bundle();
+  $suggestions[] = 'stripe_payment__' . $entity->bundle() . '__' . $sanitized_view_mode;
+  $suggestions[] = 'stripe_payment__' . $entity->id();
+  $suggestions[] = 'stripe_payment__' . $entity->id() . '__' . $sanitized_view_mode;
+  return $suggestions;
+}
