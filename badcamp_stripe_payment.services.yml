@@ -1,0 +1,5 @@
+services:
+  badcamp_stripe_payment.charge:
+    class: Drupal\badcamp_stripe_payment\BadCampStripePaymentCharge
+    arguments: ['@stripe_api.stripe_api']
+

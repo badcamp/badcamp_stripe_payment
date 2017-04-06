@@ -1,0 +1,14 @@
+<form action="/checkout/charge" method="POST">
+  <script
+      src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+      data-key="{{ data_key }}"
+      data-amount="{{ amount }}"
+      data-name="{{ org_name }}"
+      data-description="{{ data_description }}"
+      data-image="https://s3.amazonaws.com/stripe-uploads/acct_16LjmVIcdSas0QJqmerchant-icon-1439944455254-Screen%20Shot%202015-08-18%20at%205.33.41%20PM.png"
+      data-locale="auto"
+      {% if data_zip_code %}
+        data-zip-code="true">
+      {% endif %}
+  </script>
+</form>

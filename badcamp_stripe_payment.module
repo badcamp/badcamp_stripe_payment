@@ -26,8 +26,9 @@ function badcamp_stripe_payment_help($route_name, RouteMatchInterface $route_mat
 /**
  * Implements hook_theme().
  */
-function badcamp_stripe_payment_theme() {
+function badcamp_stripe_payment_theme($existing, $type, $theme, $path) {
   $theme = [];
+
   $theme['stripe_payment'] = array(
     'render element' => 'elements',
     'file' => 'stripe_payment.page.inc',
@@ -38,6 +39,16 @@ function badcamp_stripe_payment_theme() {
     'variables' => ['content' => NULL],
     'file' => 'stripe_payment.page.inc',
   ];
+  $theme['stripe_checkout'] = [
+    'variables' => [
+      'data_key' => NULL,
+      'amount' => NULL,
+      'org_name' => NULL,
+      'data_zip_code' => NULL
+    ],
+    'template' => 'stripe_checkout'
+  ];
+
   return $theme;
 }
 
