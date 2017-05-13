@@ -5,7 +5,7 @@
   "keywords": ["Drupal"],
   "license": "GPL-2.0+",
   "homepage": "https://www.drupal.org/project/badcamp_stripe_payment",
-  "minimum-stability": "dev",
+  "minimum-stability": "dev-master",
   "support": {
     "issues": "https://www.drupal.org/project/issues/badcamp_stripe_payment",
     "source": "http://cgit.drupalcode.org/badcamp_stripe_payment"
