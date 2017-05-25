@@ -1,14 +1,14 @@
 {
-  "name": "drupal/badcamp_stripe_payment",
+  "name": "badcamp/badcamp_stripe_payment",
   "type": "drupal-module",
   "description": "Provides integration of the Stripe payment processing service by providing a charging and refund service as well as an entity that will store the payment data for each payment made.",
   "keywords": ["Drupal"],
   "license": "GPL-2.0+",
-  "homepage": "https://www.drupal.org/project/badcamp_stripe_payment",
+  "homepage": "https://github.com/badcamp/badcamp_stripe_payment",
   "minimum-stability": "dev-master",
   "support": {
-    "issues": "https://www.drupal.org/project/issues/badcamp_stripe_payment",
-    "source": "http://cgit.drupalcode.org/badcamp_stripe_payment"
+    "issues": "https://github.com/badcamp/badcamp_stripe_payment",
+    "source": "https://github.com/badcamp/badcamp_stripe_payment.git"
   },
   "require": { }
 }
