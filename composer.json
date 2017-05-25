@@ -5,10 +5,12 @@
   "keywords": ["Drupal"],
   "license": "GPL-2.0+",
   "homepage": "https://github.com/badcamp/badcamp_stripe_payment",
-  "minimum-stability": "dev-master",
+  "minimum-stability": "dev",
   "support": {
     "issues": "https://github.com/badcamp/badcamp_stripe_payment",
     "source": "https://github.com/badcamp/badcamp_stripe_payment.git"
   },
-  "require": { }
+  "require": {
+    "stripe/stripe-php": "^2.0@dev"
+  }
 }
