@@ -4,4 +4,4 @@ description: Provides integration of the Stripe payment processing service by pr
 core: 8.x
 package: BADCamp
 dependencies:
-  - stripe_api
+  - stripe_api = 8.x-1.x
