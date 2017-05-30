@@ -11,6 +11,12 @@
     "source": "https://github.com/badcamp/badcamp_stripe_payment.git"
   },
   "require": {
-    "stripe/stripe-php": "^2.0@dev"
+    "drupal/stripe_api": "1.x-dev"
+  },
+  "repositories": {
+    "drupal": {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
+    }
   }
 }
