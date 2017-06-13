@@ -38,6 +38,34 @@ function badcamp_stripe_payment_theme() {
     'variables' => ['content' => NULL],
     'file' => 'stripe_payment.page.inc',
   ];
+  $theme['stripe_checkout'] = [
+    'variables' => [
+      'data_key' => NULL,
+      'description' => NULL,
+      'payment_type' => NULL,
+      'amount' => NULL,
+      'org_name' => NULL,
+      'data_description' => NULL,
+      'data_zip_code' => NULL
+    ],
+    'template' => 'stripe_checkout'
+  ];
+  $theme['stripe_checkout_complete'] = [
+    'variables' => [
+      'message' => NULL,
+      'amount' => NULL,
+      'statement_indicator' => NULL
+    ],
+    'template' => 'stripe_checkout_complete'
+  ];
+  $theme['stripe_checkout_error'] = [
+    'variables' => [
+      'message' => NULL,
+      'error' => NULL,
+      'decline_code' => NULL
+    ],
+    'template' => 'stripe_checkout_error'
+  ];
   return $theme;
 }
 

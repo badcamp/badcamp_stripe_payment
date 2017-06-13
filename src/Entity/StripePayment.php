@@ -46,13 +46,12 @@ use Drupal\user\UserInterface;
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
  *     "langcode" = "langcode",
- *     "entity_id" = "entity_id",
  *     "stripe_transaction_id" = "stripe_transaction_id",
  *     "stripe_outcome_type" = "stripe_outcome_type",
  *     "paid" = "paid",
  *     "amount" = "amount",
  *     "refunded" = "refunded",
- *     "stripe_status" = "stripe_status"
+ *     "stripe_status" = "stripe_status",
  *   },
  *   links = {
  *     "canonical" = "/admin/structure/stripe_payment/{stripe_payment}",
@@ -225,6 +224,7 @@ class StripePayment extends RevisionableContentEntityBase implements StripePayme
       e.g:Training or donation node / entity.'))
       ->setSetting('target_type', 'node')
       ->setSetting('handler', 'default')
+      ->setSetting('default_value',null)
       ->setTranslatable(FALSE)
       ->setDisplayOptions('form', array(
         'type' => 'entity_reference_autocomplete',
@@ -316,6 +316,22 @@ class StripePayment extends RevisionableContentEntityBase implements StripePayme
     $fields['stripe_status'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Stripe Status'))
       ->setRequired(TRUE)
+      ->setTranslatable(TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => 0,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => 0,
+      ])
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayConfigurable('form', TRUE);
+
+    $fields['stripe_customer_id'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Stripe Customer ID'))
+      ->setRequired(FALSE)
       ->setTranslatable(TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',

@@ -7,6 +7,12 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Url;
 use Drupal\badcamp_stripe_payment\Entity\StripePaymentInterface;
+use Drupal\badcamp_stripe_payment\StripePaymentStripeApiService;
+use Symfony\Component\Config\Definition\Exception\Exception;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Core\Entity\EntityTypeManager;
 
 /**
  * Class StripePaymentController.
@@ -17,6 +23,39 @@ use Drupal\badcamp_stripe_payment\Entity\StripePaymentInterface;
  */
 class StripePaymentController extends ControllerBase implements ContainerInjectionInterface {
 
+  /*
+    * Drupal\badcamp_stripe_payment\StripePaymentStripeApiService definition.
+    *
+    * @var \Drupal\badcamp_stripe_payment\StripePaymentStripeApiService
+    */
+  protected $stripeApi;
+
+  /**
+   * StripePaymentController constructor.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request
+   */
+  protected $request;
+
+  protected $entityTypeManager;
+
+  public function __construct(RequestStack $request,
+    StripePaymentStripeApiService $stripeApiService,
+    EntityTypeManager $entityTypeManager) {
+    $this->request = $request;
+    $this->stripeApi = $stripeApiService;
+    $this->entityTypeManager = $entityTypeManager;
+  }
+
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('request_stack'),
+      $container->get('badcamp_stripe_payment.stripe_api'),
+      $container->get('entity_type.manager')
+    );
+  }
   /**
    * Displays a Stripe payment  revision.
    *
@@ -158,6 +197,145 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
     );
 
     return $build;
+  }
+
+  /**
+   * Handles the charging of the card via the token from Stripe.
+   */
+  public function checkoutCharge () {
+    $build = [];
+    $stripe_token = $this->request->getCurrentRequest()->get('stripeToken');
+    $stripe_email = $this->request->getCurrentRequest()->get('stripeEmail');
+    $stripe_token_type = $this->request->getCurrentRequest()->get('stripeTokenType');
+    $amount = $this->request->getCurrentRequest()->get('amount');
+    $payment_type = $this->request->getCurrentRequest()->get('payment_type');
+
+    //$this->stripeApi->getPubKey();
+    //$this->stripeApi->getApiKey();
+
+    // Create the Customer in Stripe
+/*
+    $customer_params = [
+      'email' => $stripe_email,
+      'source'  => $stripe_token
+    ];
+
+    $customer = $this->stripeApi->call('Customer','create',$customer_params);
+    // @todo This customer exists, look them up instead.
+    if(is_null($customer)) {
+      //$this->stripeApi->call('Customer','')
+    }
+      // @todo: store the stripe customer ID for this user in Drupal.
+*/
+
+    // Make sure we have a customer record from Stripe and that the amount sent
+    // through is set and is more than zero dollars and is numeric.
+    if (isset($amount) && is_numeric($amount) && $amount > 0) {
+      //Create the Charge in Stripe
+      $charge_params = [
+        'amount'   => $amount,
+        'description' => 'BADCamp Sponsorship',
+        'currency' => 'usd',
+        'source' => $stripe_token
+      ];
+
+      // Try to charge the card, if there is an error log it and output the
+      // error to the screen.
+
+      $charge = $this->stripeApi->callWithErrors('Charge','create',$charge_params);
+
+      if (isset($charge->declineCode)) {
+        drupal_set_message(t('There was a problem with your payment!'),'error');
+        // Show the error on screen.
+        $build = [
+          '#theme' => 'stripe_checkout_error',
+          '#message' => t('There was a problem processing your @type payment for 
+          @amount.', [
+            '@type' => $payment_type,
+            '@amount' => $amount
+          ]),
+          '#error' => $charge->getMessage(),
+          '#decline_code' => $charge->declineCode
+        ];
+        return $build;
+      }
+
+      // This payment was marked for review, notify the site owners
+      if (isset($charge->review)) {
+        // todo: set up configuration for module to collect a payment reviewer email address.
+        // todo: Send email to the reviewer.
+//        $module = "challenge_group_invite";
+//        $key = "invitation_invitee";
+//        // Specify 'to' and 'from' addresses.
+//        $to = $this->config('badcamp_stripe_payment.payment_reviewer')->get('mail');
+//        $from = $this->config('system.site')->get('mail');
+//        $language_code = $this->languageManager->getDefaultLanguage()->getId();
+//        $params = ['account' => $user, 'group' => $this->group];
+//        $send_now = TRUE;
+//        $result = $this->mailManager->mail($module, $key, $to, $language_code, $params, $from, $send_now);
+      }
+
+      // Store the payment in Drupal
+      if ($charge->captured && $charge->paid) {
+
+        $this->savePayment($payment_type,$charge);
+
+        // Show the payment complete regardless if the payment record is saved
+        // to reduce user confusion.
+        drupal_set_message(t('Your payment was successful'));
+        $build = [
+          '#title' => t('Payment Complete'),
+          '#theme' => 'stripe_checkout_complete',
+          '#message' => t('Thank you for your @type payment.',['@type' => $payment_type]),
+          '#amount' => $charge->amount,
+          '#statement_indicator' => 'BADCamp Sponsorship', //@todo: get statment indicator into config
+        ];
+
+      }
+    }
+
+    return $build;
+  }
+
+  /**
+   * Save a payment record in the database.
+   *
+   * @param $payment_type
+   * @param $charge
+   */
+  protected function savePayment($payment_type,$charge) {
+    $stripe_payment_entity_storage = $this->entityTypeManager->getStorage('stripe_payment');
+    $stripe_payment_entity = $stripe_payment_entity_storage->create([
+      'type' => $payment_type,
+      'user_id' => $this->currentUser()->id(),
+      'stripe_transaction_id' => $charge->id,
+      'stripe_outcome_type' => $charge->outcome->type,
+      'paid' => $charge->paid,
+      'amount' => $charge->amount,
+      'refunded' => $charge->refunded,
+      'stripe_status' => $charge->status
+    ]);
+    // Save the payment record. Log any error.
+    try {
+
+      $stripe_payment_entity_storage->save($stripe_payment_entity);
+
+    } catch (Exception $dbe) {
+
+      $db_error = $dbe->getMessage();
+      // Log the error to watchdog log
+      $this->getLogger('badcamp_stripe_payment')->error(t('The @type payment 
+        submitted by @user for @stripe_id in the amount of @amount was not 
+        stored in the stripe_payment table because: 
+        @error', [
+        '@type' => $payment_type,
+        '@user' => $this->currentUser()->getAccountName(),
+        '@stripe_id' => $charge->id,
+        '@amount' => $charge->amount,
+        '@error' => $db_error
+      ]));
+
+    }
   }
 
 }

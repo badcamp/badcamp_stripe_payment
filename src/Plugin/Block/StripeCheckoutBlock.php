@@ -2,7 +2,10 @@
 
 namespace Drupal\badcamp_stripe_payment\Plugin\Block;
 
+use Drupal\badcamp_stripe_payment\StripePaymentStripeApiService;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Entity\EntityTypeBundleInfo;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -19,11 +22,19 @@ use Drupal\stripe_api\StripeApiService;
 class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
-   * Drupal\stripe_api\StripeApiService definition.
+   * Drupal\badcamp_stripe_payment\StripePaymentStripeApiService definition.
    *
-   * @var \Drupal\stripe_api\StripeApiService
+   * @var \Drupal\badcamp_stripe_payment\StripePaymentStripeApiService
    */
   protected $stripeApi;
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfo
+   */
+  protected $bundleInfo;
 
   /**
    * Construct.
@@ -39,10 +50,14 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    StripeApiService $stripe_api
+    StripePaymentStripeApiService $stripe_api,
+    EntityTypeManager $entityManager,
+    EntityTypeBundleInfo $bundleInfo
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->stripeApi = $stripe_api;
+    $this->entityTypeManager = $entityManager;
+    $this->bundleInfo = $bundleInfo;
   }
 
   /**
@@ -53,7 +68,9 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('stripe_api.stripe_api')
+      $container->get('badcamp_stripe_payment.stripe_api'),
+      $container->get('entity_type.manager'),
+      $container->get('entity_type.bundle.info')
     );
   }
 
@@ -79,7 +96,7 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
       Address Verification System or AVS) provide additional levels of 
       confirmation that the person using the card is the legitimate owner of 
       the card, useful to help identify and avoid fraud.'),
-      '#default_value' => $this->configuration['turn_on_avs'],
+      '#default_value' => isset($this->configuration['turn_on_avs'])? $this->configuration['turn_on_avs'] : 1,
       '#weight' => '1',
     ];
 
@@ -89,20 +106,47 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
       '#title' => $this->t('Amount'),
       '#description' => $this->t('ONLY NUMBERS ARE ALLOWED! The dollar amount 
       that should be charged IN CENTS, e.g:($20 = 2000)'),
-      '#default_value' => $this->configuration['amount'],
+      '#default_value' => isset($this->configuration['amount'])? $this->configuration['amount']: '',
       '#weight' => '2',
     ];
 
     $form['description'] = array(
-      '#type' => 'textfield',
+      '#type' => 'text_format',
       '#required' => FALSE,
       '#title' => $this->t('Description'),
       '#description' => $this->t('The description of the item you are asking 
       the buyer to pay for.'),
-      '#default_value' => $this->configuration['description'],
-      '#weight' => '3',
+      '#default_value' => isset($this->configuration['description']['value'])?
+        $this->configuration['description']['value']: '',
+      '#format' => isset($this->configuration['description']['format'])?
+        $this->configuration['description']['format'] : 'basic_html',
+      '#weight' => '3'
     );
-    return $form;
+
+    if ($definitions = $this->bundleInfo->getBundleInfo('stripe_payment')) {
+      $bundle_options = [];
+      if (isset($definitions) && is_array($definitions)) {
+        foreach ($definitions as $definition_key => $definition) {
+          $bundle_options[$definition_key]  = $definition['label'];
+        }
+      }
+      $form['payment_type'] = [
+        '#type' => 'select',
+        '#required' => TRUE,
+        '#title' => $this->t('Type'),
+        '#description' => $this->t('The type of payment.'),
+        '#default_value' => isset($this->configuration['payment_type'])?
+          $this->configuration['payment_type'] : '',
+        '#options' => $bundle_options,
+        '#weight' => '4',
+      ];
+
+      return $form;
+    }
+    else {
+      drupal_set_message(t('You need to specify a payment type first'), 'error');
+    }
+
   }
 
   /**
@@ -112,6 +156,7 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
     $this->configuration['turn_on_avs'] = $form_state->getValue('turn_on_avs');
     $this->configuration['amount'] = $form_state->getValue('amount');
     $this->configuration['description'] = $form_state->getValue('description');
+    $this->configuration['payment_type'] = $form_state->getValue('payment_type');
   }
 
   /**
@@ -122,13 +167,14 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
 
     $build['stripe_checkout'] = [
       '#theme' => 'stripe_checkout',
+      '#description' => $this->configuration['description']['value'],
       '#data_key' => $this->stripeApi->getPubKey(),
       '#amount' => $this->configuration['amount'],
       '#org_name' => $this->label(),
-      '#data_description' => $this->configuration['description'],
-      '#data_zip_code' => $this->configuration['turn_on_avs']
+      '#data_description' => $this->configuration['payment_type'],
+      '#data_zip_code' => $this->configuration['turn_on_avs'],
+      '#payment_type' => $this->configuration['payment_type']
     ];
-
     return $build;
   }
 
