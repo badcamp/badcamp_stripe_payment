@@ -11,8 +11,7 @@
     "source": "https://github.com/badcamp/badcamp_stripe_payment.git"
   },
   "require": {
-    "drupal/stripe_api": "1.x-dev",
-    "cweagans/composer-patches": "dev-master"
+    "drupal/stripe_api": "1.x-dev"
   },
   "extra": {
     "patches": {
