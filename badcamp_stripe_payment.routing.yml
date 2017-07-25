@@ -5,3 +5,11 @@ badcamp_stripe_payment.checkout_charge:
     _title: 'Checkout Charge'
   requirements:
     _permission: 'add stripe payment entities'
+
+badcamp_stripe_payment.donation_page_controller:
+  path: '/donate'
+  defaults:
+    _controller: '\Drupal\badcamp_stripe_payment\Controller\DonationPageController::displayContent'
+    _title: 'Donate to BADCamp'
+  requirements:
+    _permission: 'access content'
