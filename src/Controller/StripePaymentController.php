@@ -7,7 +7,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Url;
 use Drupal\badcamp_stripe_payment\Entity\StripePaymentInterface;
-use Drupal\badcamp_stripe_payment\StripePaymentStripeApiService;
+use Drupal\stripe_api\StripeApiService;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -39,7 +39,7 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
   protected $entityTypeManager;
 
   public function __construct(RequestStack $request,
-    StripePaymentStripeApiService $stripeApiService,
+    StripeApiService $stripeApiService,
     EntityTypeManager $entityTypeManager) {
     $this->request = $request;
     $this->stripeApi = $stripeApiService;
@@ -52,7 +52,7 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('request_stack'),
-      $container->get('badcamp_stripe_payment.stripe_api'),
+      $container->get('stripe_api.stripe_api'),
       $container->get('entity_type.manager')
     );
   }
