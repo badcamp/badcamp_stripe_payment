@@ -44,6 +44,7 @@ function badcamp_stripe_payment_theme() {
       'description' => NULL,
       'payment_type' => NULL,
       'amount' => NULL,
+      'email' => NULL,
       'org_name' => NULL,
       'data_description' => NULL,
       'data_zip_code' => NULL

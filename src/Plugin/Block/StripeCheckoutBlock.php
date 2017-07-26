@@ -2,14 +2,15 @@
 
 namespace Drupal\badcamp_stripe_payment\Plugin\Block;
 
-use Drupal\badcamp_stripe_payment\StripePaymentStripeApiService;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\stripe_api\StripeApiService;
+use Drupal\Core\Session\AccountProxy;
 
 /**
  * Provides a 'StripeCheckoutBlock' block.
@@ -22,9 +23,9 @@ use Drupal\stripe_api\StripeApiService;
 class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
-   * Drupal\badcamp_stripe_payment\StripePaymentStripeApiService definition.
+   * Drupal\stripe_api\StripeApiService definition.
    *
-   * @var \Drupal\badcamp_stripe_payment\StripePaymentStripeApiService
+   * @var \Drupal\stripe_api\StripeApiService
    */
   protected $stripeApi;
   /**
@@ -35,6 +36,12 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
    * @var \Drupal\Core\Entity\EntityTypeBundleInfo
    */
   protected $bundleInfo;
+  /**
+   * Drupal\Core\Session\AccountProxy definition.
+   *
+   * @var \Drupal\Core\Session\AccountProxy
+   */
+  protected $currentUser;
 
   /**
    * Construct.
@@ -50,14 +57,16 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    StripePaymentStripeApiService $stripe_api,
+    StripeApiService $stripe_api,
     EntityTypeManager $entityManager,
-    EntityTypeBundleInfo $bundleInfo
+    EntityTypeBundleInfo $bundleInfo,
+    AccountProxy $account
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->stripeApi = $stripe_api;
     $this->entityTypeManager = $entityManager;
     $this->bundleInfo = $bundleInfo;
+    $this->currentUser = $account;
   }
 
   /**
@@ -68,9 +77,10 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('badcamp_stripe_payment.stripe_api'),
+      $container->get('stripe_api.stripe_api'),
       $container->get('entity_type.manager'),
-      $container->get('entity_type.bundle.info')
+      $container->get('entity_type.bundle.info'),
+      $container->get('current_user')
     );
   }
 
@@ -170,6 +180,7 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
       '#description' => $this->configuration['description']['value'],
       '#data_key' => $this->stripeApi->getPubKey(),
       '#amount' => $this->configuration['amount'],
+      "#email" => $this->currentUser->getEmail(),
       '#org_name' => $this->label(),
       '#data_description' => $this->configuration['payment_type'],
       '#data_zip_code' => $this->configuration['turn_on_avs'],

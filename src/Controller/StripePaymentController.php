@@ -7,7 +7,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Url;
 use Drupal\badcamp_stripe_payment\Entity\StripePaymentInterface;
-use Drupal\badcamp_stripe_payment\StripePaymentStripeApiService;
+use Drupal\stripe_api\StripeApiService;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -24,9 +24,9 @@ use Drupal\Core\Entity\EntityTypeManager;
 class StripePaymentController extends ControllerBase implements ContainerInjectionInterface {
 
   /*
-    * Drupal\badcamp_stripe_payment\StripePaymentStripeApiService definition.
+    * Drupal\stripe_api\StripeApiService definition.
     *
-    * @var \Drupal\badcamp_stripe_payment\StripePaymentStripeApiService
+    * @var \Drupal\stripe_api\StripeApiService
     */
   protected $stripeApi;
 
@@ -39,7 +39,7 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
   protected $entityTypeManager;
 
   public function __construct(RequestStack $request,
-    StripePaymentStripeApiService $stripeApiService,
+    StripeApiService $stripeApiService,
     EntityTypeManager $entityTypeManager) {
     $this->request = $request;
     $this->stripeApi = $stripeApiService;
@@ -52,7 +52,7 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('request_stack'),
-      $container->get('badcamp_stripe_payment.stripe_api'),
+      $container->get('stripe_api.stripe_api'),
       $container->get('entity_type.manager')
     );
   }
@@ -283,11 +283,14 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
         // Show the payment complete regardless if the payment record is saved
         // to reduce user confusion.
         drupal_set_message(t('Your payment was successful'));
+
+        setlocale(LC_MONETARY, 'en_US.UTF-8');
+
         $build = [
           '#title' => t('Payment Complete'),
           '#theme' => 'stripe_checkout_complete',
           '#message' => t('Thank you for your @type payment.',['@type' => $payment_type]),
-          '#amount' => $charge->amount,
+          '#amount' => money_format('%.2n',number_format($charge->amount/100,"2",".",",")),
           '#statement_indicator' => 'BADCamp Sponsorship', //@todo: get statment indicator into config
         ];
 
