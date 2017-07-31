@@ -12,4 +12,4 @@ badcamp_stripe_payment.donation_page_controller:
     _controller: '\Drupal\badcamp_stripe_payment\Controller\DonationPageController::displayContent'
     _title: 'Donate to BADCamp'
   requirements:
-    _permission: 'access content'
+    _permission: 'add stripe payment entities'
