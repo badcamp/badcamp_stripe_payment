@@ -6,6 +6,10 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\badcamp_stripe_payment\EventSubscriber\DonateRedirectSubscriber;
+use Drupal\user\Entity\User;
+use Drupal\Core\Url;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Implements hook_help().
@@ -84,4 +88,26 @@ function badcamp_stripe_payment_theme_suggestions_stripe_payment(array $variable
   $suggestions[] = 'stripe_payment__' . $entity->id();
   $suggestions[] = 'stripe_payment__' . $entity->id() . '__' . $sanitized_view_mode;
   return $suggestions;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function badcamp_stripe_payment_form_user_register_form_alter(&$form, &$form_state, $form_id) {
+  $form['actions']['submit']['#submit'][] = 'badcamp_stripe_register_redirect_submit';
+}
+
+function badcamp_stripe_register_redirect_submit(&$form, FormStateInterface &$form_state) {
+  //get the user
+  $account = User::load(\Drupal::currentUser()->id());
+  // get donations
+  $DSub = new DonateRedirectSubscriber;
+  $donations = $DSub->_get_donations($account->id());
+  //Take them to donations page if they have none. Which should normally be the
+  //case.
+  if (count($donations) < 1) {
+    $redirect_url = URL::fromRoute('badcamp_stripe_payment.donation_page_controller');
+    $form_state->setRedirectUrl($redirect_url);
+  }
+
 }

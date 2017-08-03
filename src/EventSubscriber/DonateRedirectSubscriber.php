@@ -44,9 +44,7 @@ class DonateRedirectSubscriber implements EventSubscriberInterface {
       //get the user
       $account = User::load(\Drupal::currentUser()->id());
       //have they donated? If no, redirect to donate page
-      $entityTypeManager = \Drupal::service('entity_type.manager');
-      $donateStorage = $entityTypeManager->getStorage('stripe_payment');
-      $donations = $donateStorage->loadByProperties(['user_id' => $account->id()]);
+      $donations = $this->_get_donations($account->id());
       if (count($donations) < 1) {
         $redirect_url = URL::fromRoute('badcamp_stripe_payment.donation_page_controller');
         $response = new RedirectResponse($redirect_url->toString(), 301);
@@ -59,6 +57,20 @@ class DonateRedirectSubscriber implements EventSubscriberInterface {
       return;
     }
 
+  }
+
+  /**
+   * Get the donations for a given user ID
+   *
+   * @param $aid User account id
+   * @return mixed
+   */
+  public function _get_donations($aid) {
+    //@todo: make this a separate service
+    $entityTypeManager = \Drupal::service('entity_type.manager');
+    $donateStorage = $entityTypeManager->getStorage('stripe_payment');
+    $donations = $donateStorage->loadByProperties(['user_id' => $aid]);
+    return $donations;
   }
 
 }
