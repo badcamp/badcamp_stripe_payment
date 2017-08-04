@@ -186,6 +186,7 @@ class StripeCheckoutBlock extends BlockBase implements ContainerFactoryPluginInt
       '#data_zip_code' => $this->configuration['turn_on_avs'],
       '#payment_type' => $this->configuration['payment_type']
     ];
+    $build['#cache']['max-age'] = 0;
     return $build;
   }
 
