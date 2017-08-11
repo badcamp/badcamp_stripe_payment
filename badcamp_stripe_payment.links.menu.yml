@@ -16,3 +16,10 @@ entity.stripe_payment_type.collection:
   parent: system.admin_structure
   weight: 99
 
+badcamp_stripe_payment.swag_selector_form:
+  title: 'Swag Selector'
+  route_name: badcamp_stripe_payment.swag_selector_form
+  description: 'Set configuration for the swag selections.'
+  parent: system.admin_config_system
+  weight: 99
+

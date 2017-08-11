@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Entity\EntityTypeManager;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\badcamp_stripe_payment\Form\SwagSelectorForm;
 
 /**
  * Class StripePaymentController.
@@ -284,22 +286,41 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
         // to reduce user confusion.
         drupal_set_message(t('Your payment was successful'));
 
-        setlocale(LC_MONETARY, 'en_US.UTF-8');
+        // Redirect to the swag selector if they have donated at a qualifying
+        // level.
+        // @todo: make config for what qualifies for swag
+        $qualified_for_swag = true;
 
-        $build = [
-          '#title' => t('Payment Complete'),
-          '#theme' => 'stripe_checkout_complete',
-          '#message' => t('Thank you for your @type payment.',['@type' => $payment_type]),
-          '#amount' => money_format('%.2n',number_format($charge->amount/100,"2",".",",")),
-          '#statement_indicator' => 'BADCamp Sponsorship', //@todo: get statment indicator into config
-        ];
+        $response = new RedirectResponse('/donation-complete');
+        if ($qualified_for_swag) {
+          $response = new RedirectResponse('/swag-selector');
+        }
 
+        return $response;
       }
     }
 
     return $build;
   }
 
+  /**
+   * Handles thanking for the donation
+   */
+  public function donationComplete() {
+    $ssf = new SwagSelectorForm;
+    $payment = $ssf->getLatestPaymentByUser($this->currentUser()->id());
+    $charge = (int)$payment->get('amount')->getString();
+    setlocale(LC_MONETARY, 'en_US.UTF-8');
+    $build = [
+      '#title' => t('Payment Complete'),
+      '#theme' => 'stripe_checkout_complete',
+      '#message' => t('Thank you for your @type payment.',['@type' => $payment->get('type')->getString()]),
+      '#amount' => money_format('%.2n',number_format($charge/100,"2",".",",")),
+      '#statement_indicator' => 'BADCamp Sponsorship', //@todo: get statement indicator into config
+    ];
+
+    return $build;
+  }
   /**
    * Save a payment record in the database.
    *

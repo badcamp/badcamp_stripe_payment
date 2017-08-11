@@ -31,3 +31,6 @@ revert all stripe payment revisions:
 delete all stripe payment revisions:
   title: 'Delete all revisions'
   description: 'Role requires permission to <em>view Stripe payment revisions</em> and <em>delete rights</em> for stripe payment entities in question or <em>administer stripe payment entities</em>.'
+
+access swag page:
+  title: 'Access the swag selection page'

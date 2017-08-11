@@ -13,3 +13,19 @@ badcamp_stripe_payment.donation_page_controller:
     _title: 'Donate to BADCamp'
   requirements:
     _permission: 'add stripe payment entities'
+
+badcamp_stripe_payment.swag_selector_form:
+  path: '/swag-selector'
+  defaults:
+    _form: '\Drupal\badcamp_stripe_payment\Form\SwagSelectorForm'
+    _title: 'Swag Settings'
+  requirements:
+    _permission: 'access swag page'
+
+badcamp_stripe_payment.donation_complete:
+  path: '/donation-complete'
+  defaults:
+    _controller: '\Drupal\badcamp_stripe_payment\Controller\StripePaymentController::donationComplete'
+    _title: 'Thank you for your donation'
+  requirements:
+    _permission: 'add stripe payment entities'
