@@ -43,27 +43,36 @@ class SwagSelectorForm extends FormBase {
       with magnificent SWAG! Below you will find some options for you to select 
       from to make sure we are getting you the correct size.'),
     ];
-    $form['t_shirt_type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('T-Shirt Type'),
-      '#options' => ["Women's" => $this->t("Women's"), "Men's" => $this->t("Men's")],
-      '#size' => 1,
-      '#default_value' => ($payment->get('field_t_shirt_type')->getString())? $payment->get('field_t_shirt_type')->getString() : '',
-    ];
-    $form['t_shirt_size'] = [
-      '#type' => 'select',
-      '#title' => $this->t('T-Shirt Size'),
-      '#options' => ['X-Small' => $this->t('X-Small'), 'Small' => $this->t('Small'), 'Medium' => $this->t('Medium'), 'Large' => $this->t('Large'), 'X-Large' => $this->t('X-Large'), 'XX-Large' => $this->t('XX-Large'), 'XXX-Large' => $this->t('XXX-Large')],
-      '#size' => 1,
-      '#default_value' => ($payment->get('field_t_shirt_size')->getString())? $payment->get('field_t_shirt_size')->getString() : '',
-    ];
-    $form['hoodie_size'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Hoodie Size'),
-      '#options' => ['Small' => $this->t('Small'), 'Medium' => $this->t('Medium'), 'Large' => $this->t('Large'), 'X-Large' => $this->t('X-Large'), 'XX-Large' => $this->t('XX-Large'), 'XX-Large' => $this->t('XX-Large'), 'XXX-Large' => $this->t('XXX-Large')],
-      '#size' => 1,
-      '#default_value' => ($payment->get('field_hoodie_size')->getString())? $payment->get('field_hoodie_size')->getString() : '',
-    ];
+
+    //@todo config to define levels instead of hardcoded
+    $level = $this->_getLevel((int)$payment->get('amount')->getString());
+
+    if ($level >= 1) {
+      $form['t_shirt_type'] = [
+        '#type' => 'select',
+        '#title' => $this->t('T-Shirt Type'),
+        '#options' => ["Women's" => $this->t("Women's"), "Men's" => $this->t("Men's")],
+        '#size' => 1,
+        '#default_value' => ($payment->get('field_t_shirt_type')->getString())? $payment->get('field_t_shirt_type')->getString() : '',
+      ];
+      $form['t_shirt_size'] = [
+        '#type' => 'select',
+        '#title' => $this->t('T-Shirt Size'),
+        '#options' => ['X-Small' => $this->t('X-Small'), 'Small' => $this->t('Small'), 'Medium' => $this->t('Medium'), 'Large' => $this->t('Large'), 'X-Large' => $this->t('X-Large'), 'XX-Large' => $this->t('XX-Large'), 'XXX-Large' => $this->t('XXX-Large')],
+        '#size' => 1,
+        '#default_value' => ($payment->get('field_t_shirt_size')->getString())? $payment->get('field_t_shirt_size')->getString() : '',
+      ];
+    }
+
+    if ($level >= 2) {
+      $form['hoodie_size'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Hoodie Size'),
+        '#options' => ['Small' => $this->t('Small'), 'Medium' => $this->t('Medium'), 'Large' => $this->t('Large'), 'X-Large' => $this->t('X-Large'), 'XX-Large' => $this->t('XX-Large'), 'XX-Large' => $this->t('XX-Large'), 'XXX-Large' => $this->t('XXX-Large')],
+        '#size' => 1,
+        '#default_value' => ($payment->get('field_hoodie_size')->getString())? $payment->get('field_hoodie_size')->getString() : '',
+      ];
+    }
 
     $form['save'] = [
       '#type' => 'submit',
@@ -107,6 +116,13 @@ class SwagSelectorForm extends FormBase {
     foreach($payments as $payment) {
       return $payment;
     }
+  }
+
+  protected function _getLevel($donation) {
+    if ($donation > 2500) {
+      return 2;
+    }
+    return 1;
   }
 
 }
