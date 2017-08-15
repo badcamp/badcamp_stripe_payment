@@ -47,9 +47,10 @@ class SwagSelectorForm extends FormBase {
     $form['message'] =[
       '#type' => 'item',
       '#title' => t('Thank you'),
-      '#description' => t('Becuase of your generousity you are being rewarded 
-      with magnificent SWAG! Below you will find some options for you to select 
-      from to make sure we are getting you the correct size.'),
+      '#description' => t('Becuase of your generosity you are being rewarded 
+      with magnificent SWAG! Please choose your size as this will help BADCamp 
+      with orders and we will do our best to make sure you get the size you 
+      select. Thank you!'),
     ];
 
     if ($level >= 1) {
