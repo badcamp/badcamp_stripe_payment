@@ -36,6 +36,14 @@ class SwagSelectorForm extends FormBase {
     $current_uid = $this->currentUser()->id();
     $payment = $this->getLatestPaymentByUser($current_uid);
 
+    if (!isset($payment)) {
+      $redirect_response = $this->redirect('user.page');
+      $redirect_response->send();
+    }
+
+    //@todo config to define levels instead of hardcoded
+    $level = $this->_getLevel((int)$payment->get('amount')->getString());
+
     $form['message'] =[
       '#type' => 'item',
       '#title' => t('Thank you'),
@@ -43,9 +51,6 @@ class SwagSelectorForm extends FormBase {
       with magnificent SWAG! Below you will find some options for you to select 
       from to make sure we are getting you the correct size.'),
     ];
-
-    //@todo config to define levels instead of hardcoded
-    $level = $this->_getLevel((int)$payment->get('amount')->getString());
 
     if ($level >= 1) {
       $form['t_shirt_type'] = [
