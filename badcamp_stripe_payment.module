@@ -71,6 +71,7 @@ function badcamp_stripe_payment_theme() {
     ],
     'template' => 'stripe_checkout_error'
   ];
+  $theme['#cache']['max-age'] = 0;
   return $theme;
 }
 
