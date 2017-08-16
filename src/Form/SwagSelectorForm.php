@@ -47,7 +47,7 @@ class SwagSelectorForm extends FormBase {
     $form['message'] =[
       '#type' => 'item',
       '#title' => t('Thank you'),
-      '#description' => t('Becuase of your generosity you are being rewarded 
+      '#description' => t('Because of your generosity you are being rewarded 
       with magnificent SWAG! Please choose your size as this will help BADCamp 
       with orders and we will do our best to make sure you get the size you 
       select. Thank you!'),
