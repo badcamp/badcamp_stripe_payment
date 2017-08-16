@@ -125,7 +125,7 @@ class SwagSelectorForm extends FormBase {
   }
 
   protected function _getLevel($donation) {
-    if ($donation > 2500) {
+    if ($donation > 5000) {
       return 2;
     }
     return 1;
