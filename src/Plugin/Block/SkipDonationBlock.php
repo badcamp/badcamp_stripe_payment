@@ -70,14 +70,28 @@ class SkipDonationBlock extends BlockBase {
   public function build() {
     $build = [];
 
+    $build['skip_do_not_bug'] = [
+      '#title' => $this->t('Do not bug me with this again'),
+      '#type' => 'link',
+      '#attributes' => [
+        'class' => ['button', 'large']
+      ],
+      '#url' => URL::fromRoute('badcamp_stripe_payment.do_not_bug'),
+      '#weight' => 1
+    ];
+
     $build['skip_donation_block_path'] = [
       '#title' => $this->t($this->configuration['button_text']),
       '#type' => 'link',
       '#attributes' => [
-        'class' => ['button']
+        'class' => ['button', 'large', 'hollow']
       ],
       '#url' => URL::fromUserInput($this->configuration['path']),
+      '#weight' => 1
     ];
+
+    // disable caching for this block.
+    $build['#cache']['max-age'] = 0;
 
     return $build;
   }

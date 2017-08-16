@@ -8,6 +8,8 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Url;
 use Drupal\badcamp_stripe_payment\Entity\StripePaymentInterface;
 use Drupal\stripe_api\StripeApiService;
+use Stripe\Charge;
+use Stripe\StripeObject;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -320,6 +322,25 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
     ];
 
     return $build;
+  }
+
+  /**
+   * Handles getting a fake payment in the system for $0 so they won't get
+   * bothered trying to go to their user page anymore.
+   */
+  public function donationDoNotBug() {
+    $charge = new Charge(0);
+    //$charge->id = 0;
+    $charge->outcome = new StripeObject();
+    $charge->outcome->type = 'do_not_bug';
+    $charge->paid = 1;
+    $charge->amount = 0;
+    $charge->refunded = 0;
+    $charge->status = 'succeeded';
+    $this->savePayment('donation',$charge);
+
+    $response = new RedirectResponse('/user');
+    return $response;
   }
   /**
    * Save a payment record in the database.

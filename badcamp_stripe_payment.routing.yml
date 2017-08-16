@@ -29,3 +29,11 @@ badcamp_stripe_payment.donation_complete:
     _title: 'Thank you for your donation'
   requirements:
     _permission: 'add stripe payment entities'
+
+badcamp_stripe_payment.do_not_bug:
+  path: '/donate/do_not_bug'
+  defaults:
+    _controller: '\Drupal\badcamp_stripe_payment\Controller\StripePaymentController::donationDoNotBug'
+    _title: 'Checkout Charge'
+  requirements:
+    _permission: 'add stripe payment entities'
