@@ -119,6 +119,7 @@ class SwagSelectorForm extends FormBase {
   public function getLatestPaymentByUser($uid) {
     $this->entityTypeManager = \Drupal::service('entity_type.manager');
     $payments = $this->entityTypeManager->getStorage('stripe_payment')->loadByProperties(['user_id' => $uid, 'type' => 'donation']);
+    $payments = array_reverse($payments);
     foreach($payments as $payment) {
       return $payment;
     }
