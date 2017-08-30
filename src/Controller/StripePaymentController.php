@@ -213,6 +213,7 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
     $stripe_token_type = $this->request->getCurrentRequest()->get('stripeTokenType');
     $amount = $this->request->getCurrentRequest()->get('amount');
     $payment_type = $this->request->getCurrentRequest()->get('payment_type');
+    $receipt_email = $this->request->getCurrentRequest()->get('stripeEmail');
 
     //$this->stripeApi->getPubKey();
     //$this->stripeApi->getApiKey();
@@ -240,7 +241,8 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
         'amount'   => $amount,
         'description' => 'BADCamp Sponsorship',
         'currency' => 'usd',
-        'source' => $stripe_token
+        'source' => $stripe_token,
+        'receipt_email' => $receipt_email
       ];
 
       // Try to charge the card, if there is an error log it and output the
