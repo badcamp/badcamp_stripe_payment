@@ -261,6 +261,10 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
           '#error' => $charge->getMessage(),
           '#decline_code' => $charge->declineCode
         ];
+
+        // disable caching for this block.
+        $build['#cache']['max-age'] = 0;
+
         return $build;
       }
 
@@ -302,6 +306,9 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
       }
     }
 
+    // disable caching for this block.
+    $build['#cache']['max-age'] = 0;
+
     return $build;
   }
 
@@ -320,6 +327,9 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
       '#amount' => money_format('%.2n',number_format($charge/100,"2",".",",")),
       '#statement_indicator' => 'BADCamp Sponsorship', //@todo: get statement indicator into config
     ];
+
+    // disable caching for this block.
+    $build['#cache']['max-age'] = 0;
 
     return $build;
   }
