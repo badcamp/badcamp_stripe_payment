@@ -106,7 +106,7 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $elements = [];
     if (count($items) > 0) {
-      $total_payments = $this->getNumberOfPayments($items->getEntity()->id());
+      $total_payments = $this->getNumberOfPayments($items->getEntity()->id(), $this->currentUser->id());
       $item = $items->get(0);
       if (($total_payments < $item->max_payments || $item->max_payments == 0) && $item->enable) {
         $payment_label = $this->stripeBundles[$item->payment_type]['label'];
@@ -138,8 +138,15 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
   /**
    * Get the number of payments for the provided entity and it's ID.
    */
-  private function getNumberOfPayments($entity_id) {
-    return $this->entityTypeManager->getStorage('stripe_payment')->getQuery('AND')->condition('entity_id', $entity_id)->count()->execute();
+  private function getNumberOfPayments($entity_id, $user_id = 0) {
+    return $this
+      ->entityTypeManager
+      ->getStorage('stripe_payment')
+      ->getQuery('AND')
+      ->condition('entity_id', $entity_id)
+      ->condition('user_id', $user_id)
+      ->count()
+      ->execute();
   }
 
 }
