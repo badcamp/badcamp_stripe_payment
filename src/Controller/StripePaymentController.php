@@ -16,6 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Entity\EntityTypeManager;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\node\Entity\Node;
 use Drupal\badcamp_stripe_payment\Form\SwagSelectorForm;
 
 /**
@@ -214,9 +215,8 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
     $amount = $this->request->getCurrentRequest()->get('amount');
     $payment_type = $this->request->getCurrentRequest()->get('payment_type');
     $receipt_email = $this->request->getCurrentRequest()->get('stripeEmail');
-
-    //$this->stripeApi->getPubKey();
-    //$this->stripeApi->getApiKey();
+    $entity_type = $this->request->getCurrentRequest()->get('entity_type');
+    $entity_id = $this->request->getCurrentRequest()->get('entity_id');
 
     // Create the Customer in Stripe
 /*
@@ -248,7 +248,7 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
       // Try to charge the card, if there is an error log it and output the
       // error to the screen.
 
-      $charge = $this->stripeApi->callWithErrors('Charge','create',$charge_params);
+      $charge = $this->stripeApi->callWithErrors('Charge','create', $charge_params);
 
       if (isset($charge->declineCode)) {
         drupal_set_message(t('There was a problem with your payment!'),'error');
@@ -288,20 +288,37 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
       // Store the payment in Drupal
       if ($charge->captured && $charge->paid) {
 
-        $this->savePayment($payment_type,$charge);
+        $data = [];
+        if ($entity_type == 'node' && $entity_id != '') {
+          $data['entity_id'] = $entity_id;
+        }
+        $this->savePayment($payment_type, $charge, $data);
 
         // Show the payment complete regardless if the payment record is saved
         // to reduce user confusion.
         drupal_set_message(t('Your payment was successful'));
 
-        // Redirect to the swag selector if they have donated at a qualifying
-        // level.
-        // @todo: make config for what qualifies for swag
-        $qualified_for_swag = true;
+        // Set a generate RedirectResponse have it go to the homepage
+        $response = new RedirectResponse('/');
 
-        $response = new RedirectResponse('/donation-complete');
-        if ($qualified_for_swag) {
-          $response = new RedirectResponse('/swag-selector');
+        // Donations
+        if($payment_type == 'donation') {
+          // Redirect to the swag selector if they have donated at a qualifying
+          // level.
+          // @todo: make config for what qualifies for swag
+          $qualified_for_swag = TRUE;
+
+          $response = new RedirectResponse('/donation-complete');
+          if ($qualified_for_swag) {
+            $response = new RedirectResponse('/swag-selector');
+          }
+        }
+        else {
+          if($entity_id != '' && $entity_type != '') {
+            $url = Url::fromRoute('entity.' . $entity_type . '.canonical', [$entity_type => $entity_id])
+              ->getInternalPath();
+            $response = new RedirectResponse('/' . $url);
+          }
         }
 
         return $response;
@@ -360,9 +377,9 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
    * @param $payment_type
    * @param $charge
    */
-  protected function savePayment($payment_type,$charge) {
+  protected function savePayment($payment_type,$charge, $additional_data = []) {
     $stripe_payment_entity_storage = $this->entityTypeManager->getStorage('stripe_payment');
-    $stripe_payment_entity = $stripe_payment_entity_storage->create([
+    $data = [
       'type' => $payment_type,
       'user_id' => $this->currentUser()->id(),
       'stripe_transaction_id' => $charge->id,
@@ -371,7 +388,8 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
       'amount' => $charge->amount,
       'refunded' => $charge->refunded,
       'stripe_status' => $charge->status
-    ]);
+    ] + $additional_data;
+    $stripe_payment_entity = $stripe_payment_entity_storage->create($data);
     // Save the payment record. Log any error.
     try {
 

@@ -218,6 +218,27 @@ class StripePayment extends RevisionableContentEntityBase implements StripePayme
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['entity_id'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Related Entity'))
+      ->setDescription(t('The related entity this payment belongs to. 
+      e.g:Training or donation node / entity.'))
+      ->setSetting('target_type', 'node')
+      ->setSetting('handler', 'default')
+      ->setSetting('default_value',null)
+      ->setTranslatable(FALSE)
+      ->setDisplayOptions('form', array(
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 5,
+        'settings' => array(
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'autocomplete_type' => 'tags',
+          'placeholder' => '',
+        ),
+      ))
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['stripe_transaction_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Stripe Transaction ID'))
       ->setRequired(TRUE)

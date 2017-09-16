@@ -2,6 +2,8 @@
 <form action="/checkout/charge" method="POST">
   <input type="hidden" name="amount" value="{{ amount }}">
   <input type="hidden" name="payment_type" value="{{ payment_type }}">
+  <input type="hidden" name="entity_type" value="{{ entity_type }}">
+  <input type="hidden" name="entity_id" value="{{ entity_id }}">
   <script
       src="https://checkout.stripe.com/checkout.js" class="stripe-button"
       data-key="{{ data_key }}"
@@ -11,6 +13,7 @@
       data-description="{{ data_description }}"
       data-image="/themes/custom/badcamp2017/images/badcamp2017-logo.png"
       data-locale="auto"
+      data-label="{{ button_label }}"
       {% if data_zip_code %}
         data-zip-code="true"
       {% endif %}
