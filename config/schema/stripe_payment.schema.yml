@@ -1,0 +1,5 @@
+# @see Configuration schema/metadata at https://drupal.org/node/1905070
+#
+field.storage_settings.stripe_payment:
+  type: mapping
+  label: 'Stripe Payment'
