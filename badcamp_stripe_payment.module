@@ -54,7 +54,8 @@ function badcamp_stripe_payment_theme() {
       'data_zip_code' => NULL,
       'button_label' => NULL,
       'entity_type' => NULL,
-      'entity_id' => NULL
+      'entity_id' => NULL,
+      'logo' => NULL,
     ],
     'template' => 'stripe_checkout'
   ];
@@ -76,6 +77,14 @@ function badcamp_stripe_payment_theme() {
   ];
   $theme['#cache']['max-age'] = 0;
   return $theme;
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function badcamp_stripe_payment_preprocess_stripe_checkout(&$variables) {
+  $logo = theme_get_setting('logo');
+  $variables['logo'] = $logo['url'];
 }
 
 /**
