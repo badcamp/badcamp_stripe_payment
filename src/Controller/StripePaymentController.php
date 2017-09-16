@@ -2,6 +2,7 @@
 
 namespace Drupal\badcamp_stripe_payment\Controller;
 
+use Drupal\badcamp_stripe_payment\Entity\StripePayment;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -18,6 +19,8 @@ use Drupal\Core\Entity\EntityTypeManager;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\node\Entity\Node;
 use Drupal\badcamp_stripe_payment\Form\SwagSelectorForm;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Access\AccessResult;
 
 /**
  * Class StripePaymentController.
@@ -217,6 +220,11 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
     $receipt_email = $this->request->getCurrentRequest()->get('stripeEmail');
     $entity_type = $this->request->getCurrentRequest()->get('entity_type');
     $entity_id = $this->request->getCurrentRequest()->get('entity_id');
+    $entity = NULL;
+
+    if(!empty($entity_type) && !empty($entity_id)) {
+      $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    }
 
     // Create the Customer in Stripe
 /*
@@ -239,7 +247,7 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
       //Create the Charge in Stripe
       $charge_params = [
         'amount'   => $amount,
-        'description' => 'BADCamp Sponsorship',
+        'description' => is_null($entity) ? 'BADCamp Sponsorship' : $entity->label(),
         'currency' => 'usd',
         'source' => $stripe_token,
         'receipt_email' => $receipt_email
@@ -287,7 +295,6 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
 
       // Store the payment in Drupal
       if ($charge->captured && $charge->paid) {
-
         $data = [];
         if ($entity_type == 'node' && $entity_id != '') {
           $data['entity_id'] = $entity_id;
@@ -412,5 +419,4 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
 
     }
   }
-
 }

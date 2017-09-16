@@ -20,6 +20,9 @@ stripe_payment:
     max_payments:
       type: integer
       label: 'Max Payments'
+    max_purchases:
+      type: integer
+      label: 'Max Purchases'
     payment_type:
       type: string
       label: 'Payment Type'

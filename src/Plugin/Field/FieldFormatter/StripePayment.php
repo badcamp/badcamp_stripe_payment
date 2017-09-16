@@ -11,6 +11,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\stripe_api\StripeApiService;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
 
 /**
  * Plugin implementation of the 'stripe_payment' formatter.
@@ -106,9 +108,12 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $elements = [];
     if (count($items) > 0) {
-      $total_payments = $this->getNumberOfPayments($items->getEntity()->id(), $this->currentUser->id());
+      $entity = $items->getEntity();
+
+      $total_payments = $this->getNumberOfPayments($entity->id(), $this->currentUser->id());
+      $total_purchases = $this->getNumberOfPayments($entity->id());
       $item = $items->get(0);
-      if (($total_payments < $item->max_payments || $item->max_payments == 0) && $item->enable) {
+      if (($total_payments < $item->max_payments || $item->max_payments == 0) && $item->enable && ($total_purchases < $item->max_purchases || $item->max_purchases == 0)) {
         $payment_label = $this->stripeBundles[$item->payment_type]['label'];
         $elements[] = [
           '#theme' => 'stripe_checkout',
@@ -116,18 +121,36 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
           '#data_key' => $this->stripeApi->getPubKey(),
           '#amount' => $item->amount,
           "#email" => $this->currentUser->getEmail(),
-          '#org_name' => $items->getEntity()->label(),
+          '#org_name' => $entity->label(),
           '#data_description' => $payment_label,
           '#data_zip_code' => $item->avs,
           '#payment_type' => $item->payment_type,
           '#button_label' => $item->button_label,
-          '#entity_type' => $items->getEntity()->getEntityType()->id(),
-          '#entity_id' => $items->getEntity()->id(),
+          '#entity_type' => $entity->getEntityType()->id(),
+          '#entity_id' => $entity->id(),
         ];
       }
+      elseif (!$item->enable){
+
+      }
       elseif ($total_payments >= $item->max_payments) {
+        $payment = $this->getPaymentsForNode($entity->id(), $this->currentUser->id());
+        $payment_id = array_pop($payment);
+        $url = Url::fromRoute('badcamp_stripe_payment.refund', ['stripe_payment' => $payment_id], [
+          'query' => [
+            'destination' => Url::fromRoute('entity.node.canonical', ['node' => $items->getEntity()->id()])->getInternalPath()
+          ]
+        ]);
+        $link = Link::fromTextAndUrl(t('Refund Payment'), $url)->toRenderable();
+        $link['#attributes']['class'][] = 'button';
+        $link['#attributes']['class'][] = 'large';
         $elements[] = [
-          '#markup' => t('Payment already made'),
+          '#markup' => render($link)
+        ];
+      }
+      elseif ($total_purchases >= $item->max_purchases){
+        $elements[] = [
+          '#markup' => t('Sold Out'),
         ];
       }
     }
@@ -136,17 +159,42 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
   }
 
   /**
-   * Get the number of payments for the provided entity and it's ID.
+   * Get the number of payments for the provided entity.
+   * Check also to see how many are for a particular user.
    */
-  private function getNumberOfPayments($entity_id, $user_id = 0) {
-    return $this
+  private function getNumberOfPayments($entity_id, $user_id = NULL) {
+    $query = $this
       ->entityTypeManager
       ->getStorage('stripe_payment')
       ->getQuery('AND')
-      ->condition('entity_id', $entity_id)
-      ->condition('user_id', $user_id)
+      ->condition('entity_id', $entity_id);
+
+    if(!is_null($user_id)) {
+      $query->condition('user_id', $user_id);
+    }
+
+    return $query->condition('refunded', 0)
       ->count()
       ->execute();
+  }
+
+  /**
+   * Returns list of Payments for entity
+   */
+  private function getPaymentsForNode($entity_id, $user_id = NULL) {
+    $query = $this
+      ->entityTypeManager
+      ->getStorage('stripe_payment')
+      ->getQuery('AND')
+      ->condition('entity_id', $entity_id);
+
+    if(!is_null($user_id)) {
+      $query->condition('user_id', $user_id);
+    }
+
+    return $query->condition('refunded', 0)
+      ->execute();
+
   }
 
 }

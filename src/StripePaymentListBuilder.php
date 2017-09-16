@@ -21,6 +21,7 @@ class StripePaymentListBuilder extends EntityListBuilder {
   public function buildHeader() {
     $header['transaction_id'] = $this->t('Stripe Transaction ID');
     $header['type'] = $this->t('Payment Type');
+    $header['refunded'] = $this->t('Refunded');
     return $header + parent::buildHeader();
   }
 
@@ -31,6 +32,7 @@ class StripePaymentListBuilder extends EntityListBuilder {
     /* @var $entity \Drupal\badcamp_stripe_payment\Entity\StripePayment */
     $row['transaction_id'] = $entity->get('stripe_transaction_id')->value;
     $row['type'] = $entity->getType();
+    $row['refunded'] = $entity->get('refunded')->first()->getValue()['value'] == 1 ? $this->t('Yes') : $this->t('No');
     return $row + parent::buildRow($entity);
   }
 

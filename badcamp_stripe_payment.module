@@ -124,3 +124,28 @@ function badcamp_stripe_register_redirect_submit(&$form, FormStateInterface &$fo
   }
 
 }
+
+/**
+ * Implements hook_entity_operation().
+ */
+function badcamp_stripe_payment_entity_operation(\Drupal\Core\Entity\EntityInterface $entity) {
+  $operations = [];
+  if ($entity->getEntityTypeId() == 'stripe_payment') {
+    $account = \Drupal::currentUser();
+    if ($account->hasPermission('administer stripe payment entities') && $entity->get('refunded')->first()->getValue()['value'] != 1) {
+      $operations['refund-payment'] = array(
+        'title' => t('Refund Payment'),
+        'weight' => 15,
+        'url' => Url::fromRoute("badcamp_stripe_payment.refund", [
+          $entity->getEntityTypeId() => $entity->id(),
+        ],[
+          'query' => [
+            'destination' =>  \Drupal::service('path.current')->getPath()
+          ]
+        ]),
+      );
+    }
+  }
+
+  return $operations;
+}

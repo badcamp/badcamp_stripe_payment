@@ -102,6 +102,7 @@ class StripePayment extends RevisionableContentEntityBase implements StripePayme
     if (!$this->getRevisionUser()) {
       $this->setRevisionUserId($this->getOwnerId());
     }
+
   }
 
   /**

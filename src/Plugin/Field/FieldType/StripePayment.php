@@ -33,6 +33,7 @@ class StripePayment extends FieldItemBase {
       'description_format' => 'basic_html',
       'button_text' => '',
       'max_payments' => 0,
+      'max_purchases' => 0,
     ] + parent::defaultStorageSettings();
 
     return $defaultStorageSettings;
@@ -67,6 +68,9 @@ class StripePayment extends FieldItemBase {
     $properties['max_payments'] = DataDefinition::create('integer')
       ->setLabel(t('Max # of Payments'));
 
+    $properties['max_purchases'] = DataDefinition::create('integer')
+      ->setLabel(t('Max # of Purchaes'));
+
     return $properties;
   }
 
@@ -82,6 +86,11 @@ class StripePayment extends FieldItemBase {
           'size' => 'big',
         ],
         'max_payments' => [
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'size' => 'big',
+        ],
+        'max_purchases' => [
           'type' => 'int',
           'unsigned' => TRUE,
           'size' => 'big',

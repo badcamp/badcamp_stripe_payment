@@ -122,6 +122,13 @@ class StripePayment extends WidgetBase implements ContainerFactoryPluginInterfac
       '#default_value' => isset($items[$delta]->max_payments) ? $items[$delta]->max_payments : 0,
     ];
 
+    $element['max_purchases'] = [
+      '#type' => 'number',
+      '#title' => t('Max # of Purchases'),
+      '#description' => t('Total number of times everyone can purchase combined. 0 = Unlimited.'),
+      '#default_value' => isset($items[$delta]->max_purchases) ? $items[$delta]->max_purchases : 0,
+    ];
+
     $element['button_label'] = [
       '#type' => 'textfield',
       '#title' => t('Button Label'),
