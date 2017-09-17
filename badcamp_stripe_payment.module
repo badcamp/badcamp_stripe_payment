@@ -132,7 +132,11 @@ function badcamp_stripe_payment_entity_operation(\Drupal\Core\Entity\EntityInter
   $operations = [];
   if ($entity->getEntityTypeId() == 'stripe_payment') {
     $account = \Drupal::currentUser();
-    if ($account->hasPermission('administer stripe payment entities') && $entity->get('refunded')->first()->getValue()['value'] != 1) {
+    $has_permission = ($account->hasPermission('administer stripe payment entities') ||
+      $account->hasPermission('refund all purchases') ||
+      $account->hasPermission('refund own purchases'));
+    $notRefunded = ($entity->get('refunded')->first()->getValue()['value'] != 1);
+    if ($has_permission && $notRefunded) {
       $operations['refund-payment'] = array(
         'title' => t('Refund Payment'),
         'weight' => 15,
