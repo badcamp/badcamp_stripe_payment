@@ -129,7 +129,10 @@ class StripePaymentRefundForm extends FormBase {
    *   Run access checks for this account.
    */
   public function refundPaymentAccess(AccountInterface $account, StripePayment $stripe_payment = NULL) {
-    $payment_owner = $stripe_payment->get('user_id')->first()->getValue()['target_id'];
-    return AccessResult::allowedIf(($account->hasPermission('administer stripe payment entities') || $account->id() == $payment_owner) && $stripe_payment->get('refunded')->first()->getValue()['value'] != 1);
+    $has_permission = ($account->hasPermission('administer stripe payment entities') ||
+      $account->hasPermission('refund all purchases') ||
+      $account->hasPermission('refund own purchases'));
+    $refunded = $stripe_payment->get('refunded')->first()->getValue()['value'];
+    return AccessResult::allowedIf($has_permission && $refunded != 1);
   }
 }

@@ -109,7 +109,6 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
     $elements = [];
     if (count($items) > 0) {
       $entity = $items->getEntity();
-
       $total_payments = $this->getNumberOfPayments($entity->id(), $this->currentUser->id());
       $total_purchases = $this->getNumberOfPayments($entity->id());
       $item = $items->get(0);
@@ -134,19 +133,32 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
 
       }
       elseif ($total_payments >= $item->max_payments) {
-        $payment = $this->getPaymentsForNode($entity->id(), $this->currentUser->id());
-        $payment_id = array_pop($payment);
-        $url = Url::fromRoute('badcamp_stripe_payment.refund', ['stripe_payment' => $payment_id], [
-          'query' => [
-            'destination' => Url::fromRoute('entity.node.canonical', ['node' => $items->getEntity()->id()])->getInternalPath()
-          ]
-        ]);
-        $link = Link::fromTextAndUrl(t('Refund Payment'), $url)->toRenderable();
-        $link['#attributes']['class'][] = 'button';
-        $link['#attributes']['class'][] = 'large';
-        $elements[] = [
-          '#markup' => render($link)
-        ];
+        if($this->canRefund()) {
+          $payment = $this->getPaymentsForNode($entity->id(), $this->currentUser->id());
+          $payment_id = array_pop($payment);
+          $url = Url::fromRoute('badcamp_stripe_payment.refund', ['stripe_payment' => $payment_id], [
+            'query' => [
+              'destination' => Url::fromRoute('entity.node.canonical', [
+                'node' => $items->getEntity()
+                  ->id()
+              ])->getInternalPath()
+            ]
+          ]);
+          $link = Link::fromTextAndUrl(t('Refund Payment'), $url)
+            ->toRenderable();
+          $link['#attributes']['class'][] = 'button';
+          $link['#attributes']['class'][] = 'large';
+          $elements[] = [
+            '#markup' => render($link)
+          ];
+        }
+        else {
+          $elements[] = [
+            '#markup' => t('Paid!'),
+            '#prefix' => '<div class="paid-message">',
+            '#suffix' => '</div>'
+          ];
+        }
       }
       elseif ($total_purchases >= $item->max_purchases){
         $elements[] = [
@@ -194,7 +206,17 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
 
     return $query->condition('refunded', 0)
       ->execute();
+  }
 
+  /**
+   * Returns if account can refund
+   */
+  private function canRefund() {
+    $has_permission = ($this->currentUser->hasPermission('administer stripe payment entities') ||
+      $this->currentUser->hasPermission('refund all purchases') ||
+      $this->currentUser->hasPermission('refund own purchases'));
+
+    return $has_permission;
   }
 
 }
