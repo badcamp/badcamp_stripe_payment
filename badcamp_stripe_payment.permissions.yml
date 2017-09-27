@@ -34,3 +34,10 @@ delete all stripe payment revisions:
 
 access swag page:
   title: 'Access the swag selection page'
+
+refund all purchases:
+  title: 'Refund all purchases'
+  restrict access: true
+
+refund own purchase:
+  title: 'Refund own purchases'

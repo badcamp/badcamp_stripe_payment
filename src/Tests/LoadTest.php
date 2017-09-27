@@ -10,7 +10,7 @@ use Drupal\simpletest\WebTestBase;
  *
  * @group badcamp_stripe_payment
  */
-class LoadTest extends WebTestBase{
+class LoadTest extends WebTestBase {
 
   /**
    * Modules to enable.
