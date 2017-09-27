@@ -133,7 +133,7 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
 
       }
       elseif ($total_payments >= $item->max_payments) {
-        if($this->canRefund()) {
+        if($this->canRefund() && $item->last_refund_date > date('Y-m-d')) {
           $payment = $this->getPaymentsForNode($entity->id(), $this->currentUser->id());
           $payment_id = array_pop($payment);
           $url = Url::fromRoute('badcamp_stripe_payment.refund', ['stripe_payment' => $payment_id], [

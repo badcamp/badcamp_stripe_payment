@@ -8,6 +8,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Url;
 use Drupal\badcamp_stripe_payment\Entity\StripePaymentInterface;
+use Drupal\flag\FlagServiceInterface;
 use Drupal\stripe_api\StripeApiService;
 use Stripe\Charge;
 use Stripe\StripeObject;
@@ -46,12 +47,16 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
 
   protected $entityTypeManager;
 
+  protected $flagService;
+
   public function __construct(RequestStack $request,
     StripeApiService $stripeApiService,
-    EntityTypeManager $entityTypeManager) {
+    EntityTypeManager $entityTypeManager,
+    FlagServiceInterface $flagService) {
     $this->request = $request;
     $this->stripeApi = $stripeApiService;
     $this->entityTypeManager = $entityTypeManager;
+    $this->flagService = $flagService;
   }
 
   /**
@@ -61,7 +66,8 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
     return new static(
       $container->get('request_stack'),
       $container->get('stripe_api.stripe_api'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('flag')
     );
   }
   /**
@@ -299,6 +305,11 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
         if ($entity_type == 'node' && $entity_id != '') {
           $data['entity_id'] = $entity_id;
         }
+
+        if ($payment_type == 'training_registration') {
+          $data['field_train_reg_rel_training'] = $entity_id;
+        }
+
         $this->savePayment($payment_type, $charge, $data);
 
         // Show the payment complete regardless if the payment record is saved
@@ -397,10 +408,18 @@ class StripePaymentController extends ControllerBase implements ContainerInjecti
       'stripe_status' => $charge->status
     ] + $additional_data;
     $stripe_payment_entity = $stripe_payment_entity_storage->create($data);
+
     // Save the payment record. Log any error.
     try {
-
       $stripe_payment_entity_storage->save($stripe_payment_entity);
+      if ($payment_type == 'training_registration') {
+        $flag = $this->flagService->getFlagById('add_to_schedule');
+        $entity = $stripe_payment_entity->get('field_train_reg_rel_training')->first()->get('entity')->getTarget()->getValue();
+        try {
+          $this->flagService->flag($flag, $entity);
+        }
+        catch (\LogicException $e) {}
+      }
 
     } catch (Exception $dbe) {
 

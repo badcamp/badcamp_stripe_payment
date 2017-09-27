@@ -69,7 +69,10 @@ class StripePayment extends FieldItemBase {
       ->setLabel(t('Max # of Payments'));
 
     $properties['max_purchases'] = DataDefinition::create('integer')
-      ->setLabel(t('Max # of Purchaes'));
+      ->setLabel(t('Max # of Purchases'));
+
+    $properties['last_refund_date'] = DataDefinition::create('datetime_iso8601')
+      ->setLabel(t('Last refund date'));
 
     return $properties;
   }
@@ -120,6 +123,10 @@ class StripePayment extends FieldItemBase {
           'type' => 'varchar',
           'length' => 255,
         ],
+        'last_refund_date' => [
+          'type' => 'varchar',
+          'length' => 20,
+        ]
       ],
     ];
 

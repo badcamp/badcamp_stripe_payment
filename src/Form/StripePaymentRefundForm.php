@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\flag\FlagServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\stripe_api\StripeApiService;
 
@@ -23,10 +24,18 @@ class StripePaymentRefundForm extends FormBase {
   protected $stripeApi;
 
   /**
+   * Drupal Flag Service
+   *
+   * @var \Drupal\flag\FlagServiceInterface
+   */
+  protected $flagService;
+
+  /**
    * Class constructor.
    */
-  public function __construct(StripeApiService $stripeApiService) {
+  public function __construct(StripeApiService $stripeApiService, FlagServiceInterface $flagService) {
     $this->stripeApi = $stripeApiService;
+    $this->flagService = $flagService;
   }
 
   /**
@@ -35,7 +44,8 @@ class StripePaymentRefundForm extends FormBase {
   public static function create(ContainerInterface $container) {
     // Instantiates this form class.
     return new static(
-      $container->get('stripe_api.stripe_api')
+      $container->get('stripe_api.stripe_api'),
+      $container->get('flag')
     );
   }
 
@@ -114,6 +124,15 @@ class StripePaymentRefundForm extends FormBase {
       try {
         $refund = $this->stripeApi->callWithErrors('Refund', 'create', $refund_params);
         $payment->set('refunded', 1);
+        if( $payment->getType() == 'training_registration') {
+          $payment->set('field_training_reg_cancelled_dt', date("Y-m-d\Th:i:s"));
+          $flag = $this->flagService->getFlagById('add_to_schedule');
+          $entity = $payment->get('field_train_reg_rel_training')->first()->get('entity')->getTarget()->getValue();
+          try {
+            $this->flagService->unflag($flag, $entity);
+          }
+          catch (\LogicException $e) {}
+        }
         $payment->save();
       }
       catch(\Exception $e){

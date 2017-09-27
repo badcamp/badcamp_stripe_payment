@@ -29,6 +29,9 @@ stripe_payment:
     button_label:
       type: string
       label: 'Button Label'
+    last_refund_date:
+      type: string
+      lable: 'Last Refund Date'
 
 field.value.stripe_payment:
   type: stripe_payment
