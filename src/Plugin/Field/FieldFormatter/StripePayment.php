@@ -128,6 +128,13 @@ class StripePayment extends FormatterBase implements ContainerFactoryPluginInter
           '#entity_type' => $entity->getEntityType()->id(),
           '#entity_id' => $entity->id(),
         ];
+
+        if( $item->max_purchases > 0) {
+          $elements[] = [
+            '#type' => 'markup',
+            '#markup' => ($item->max_purchases - $total_purchases) . ' Spaces Available'
+          ];
+        }
       }
       elseif (!$item->enable){
 
