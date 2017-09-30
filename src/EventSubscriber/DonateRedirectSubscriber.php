@@ -39,12 +39,11 @@ class DonateRedirectSubscriber implements EventSubscriberInterface {
    */
   public function routing_route_alter(Event $event) {
     $req = $event->getRequest();
-
-    if ($req->attributes->get('_route') == 'entity.user.canonical') {
-      //get the user
-      $account = User::load(\Drupal::currentUser()->id());
+    $uid = \Drupal::currentUser()->id();
+    // Check to see if the user is looking at their own user page.
+    if ($req->attributes->get('_route') == 'entity.user.canonical' && $req->attributes->get('user')->id() == $uid) {
       //have they donated? If no, redirect to donate page
-      $donations = $this->_get_donations($account->id());
+      $donations = $this->_get_donations($uid);
       if (count($donations) < 1) {
         $redirect_url = URL::fromRoute('badcamp_stripe_payment.donation_page_controller');
         $response = new RedirectResponse($redirect_url->toString(), 301);
