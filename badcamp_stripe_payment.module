@@ -51,7 +51,11 @@ function badcamp_stripe_payment_theme() {
       'email' => NULL,
       'org_name' => NULL,
       'data_description' => NULL,
-      'data_zip_code' => NULL
+      'data_zip_code' => NULL,
+      'button_label' => NULL,
+      'entity_type' => NULL,
+      'entity_id' => NULL,
+      'logo' => NULL,
     ],
     'template' => 'stripe_checkout'
   ];
@@ -73,6 +77,14 @@ function badcamp_stripe_payment_theme() {
   ];
   $theme['#cache']['max-age'] = 0;
   return $theme;
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function badcamp_stripe_payment_preprocess_stripe_checkout(&$variables) {
+  $logo = theme_get_setting('logo');
+  $variables['logo'] = $logo['url'];
 }
 
 /**
@@ -111,4 +123,33 @@ function badcamp_stripe_register_redirect_submit(&$form, FormStateInterface &$fo
     $form_state->setRedirectUrl($redirect_url);
   }
 
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function badcamp_stripe_payment_entity_operation(\Drupal\Core\Entity\EntityInterface $entity) {
+  $operations = [];
+  if ($entity->getEntityTypeId() == 'stripe_payment') {
+    $account = \Drupal::currentUser();
+    $has_permission = ($account->hasPermission('administer stripe payment entities') ||
+      $account->hasPermission('refund all purchases') ||
+      $account->hasPermission('refund own purchases'));
+    $notRefunded = ($entity->get('refunded')->first()->getValue()['value'] != 1);
+    if ($has_permission && $notRefunded) {
+      $operations['refund-payment'] = array(
+        'title' => t('Refund Payment'),
+        'weight' => 15,
+        'url' => Url::fromRoute("badcamp_stripe_payment.refund", [
+          $entity->getEntityTypeId() => $entity->id(),
+        ],[
+          'query' => [
+            'destination' =>  \Drupal::service('path.current')->getPath()
+          ]
+        ]),
+      );
+    }
+  }
+
+  return $operations;
 }

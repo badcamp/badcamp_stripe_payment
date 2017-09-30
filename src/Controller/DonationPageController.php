@@ -24,7 +24,7 @@ willing to pay for your ticket?</p>
 <p>If so, then you can give back to the camp by purchasing an individual 
 sponsorship level most comfortable for you.</p>
 
-<p>As a bonus, all individual sponsor will recieve BADCamp T-shirt.</p></div>')
+<p>As a bonus, all individual sponsors will receive a BADCamp T-shirt.</p></div>')
     ];
   }
 
