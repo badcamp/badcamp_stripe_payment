@@ -10,6 +10,7 @@ use Drupal\badcamp_stripe_payment\EventSubscriber\DonateRedirectSubscriber;
 use Drupal\user\Entity\User;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Implements hook_help().
@@ -153,3 +154,33 @@ function badcamp_stripe_payment_entity_operation(\Drupal\Core\Entity\EntityInter
 
   return $operations;
 }
+
+/**
+ * Implements hook_user_login().
+ */
+function badcamp_stripe_payment_user_login(&$account) {
+  if($account->id() > 0) {
+    //have they donated? If no, redirect to donate page
+    $donations = badcamp_stripe_payment_get_donations($account->id());
+    if (count($donations) < 1) {
+      $redirect_url = URL::fromRoute('badcamp_stripe_payment.donation_page_controller');
+      $response = new RedirectResponse($redirect_url->toString(), 302);
+      $event->setResponse($response);
+      return $event;
+    }
+  }
+}
+
+/**
+ * Get the donations for a given user ID
+ *
+ * @param $aid User account id
+ * @return mixed
+ */
+function badcamp_stripe_payment_get_donations($aid) {
+  $entityTypeManager = \Drupal::service('entity_type.manager');
+  $donateStorage = $entityTypeManager->getStorage('stripe_payment');
+  $donations = $donateStorage->loadByProperties(['user_id' => $aid]);
+  return $donations;
+}
+
