@@ -5,6 +5,7 @@ namespace Drupal\badcamp_stripe_payment\EventSubscriber;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\EventDispatcher\Event;
 use Drupal\Core\Url;
+use Drupal\Core\Link;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
@@ -38,38 +39,15 @@ class DonateRedirectSubscriber implements EventSubscriberInterface {
    * @param GetResponseEvent $event
    */
   public function routing_route_alter(Event $event) {
-    $req = $event->getRequest();
-    $uid = \Drupal::currentUser()->id();
-    // Check to see if the user is looking at their own user page.
-    if ($req->attributes->get('_route') == 'entity.user.canonical' && $req->attributes->get('user')->id() == $uid) {
-      //have they donated? If no, redirect to donate page
-      $donations = $this->_get_donations($uid);
+    $user = \Drupal::currentUser();
+    $uid = $user->id();
+    if($uid > 0) {
+      $donations = badcamp_stripe_payment_get_donations($uid);
       if (count($donations) < 1) {
-        $redirect_url = URL::fromRoute('badcamp_stripe_payment.donation_page_controller');
-        $response = new RedirectResponse($redirect_url->toString(), 301);
-        $event->setResponse($response);
-        return $event;
+        $url = URL::fromRoute('badcamp_stripe_payment.donation_page_controller');
+        $link = Link::fromTextAndUrl('here', $url);
+        drupal_set_message(t('BADCamp can only exist with the help of individuals like yourself. Please take a moment to make a donation @here.', ['@here' => $link->toString()]));
       }
-      return;
     }
-    else {
-      return;
-    }
-
   }
-
-  /**
-   * Get the donations for a given user ID
-   *
-   * @param $aid User account id
-   * @return mixed
-   */
-  public function _get_donations($aid) {
-    //@todo: make this a separate service
-    $entityTypeManager = \Drupal::service('entity_type.manager');
-    $donateStorage = $entityTypeManager->getStorage('stripe_payment');
-    $donations = $donateStorage->loadByProperties(['user_id' => $aid]);
-    return $donations;
-  }
-
 }
