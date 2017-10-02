@@ -158,15 +158,13 @@ function badcamp_stripe_payment_entity_operation(\Drupal\Core\Entity\EntityInter
 /**
  * Implements hook_user_login().
  */
-function badcamp_stripe_payment_user_login(&$account) {
+function badcamp_stripe_payment_user_login($account) {
   if($account->id() > 0) {
     //have they donated? If no, redirect to donate page
     $donations = badcamp_stripe_payment_get_donations($account->id());
     if (count($donations) < 1) {
       $redirect_url = URL::fromRoute('badcamp_stripe_payment.donation_page_controller');
-      $response = new RedirectResponse($redirect_url->toString(), 302);
-      $event->setResponse($response);
-      return $event;
+      \Drupal::service('request_stack')->getCurrentRequest()->query->set('destination', $redirect_url->toString());
     }
   }
 }
@@ -183,4 +181,3 @@ function badcamp_stripe_payment_get_donations($aid) {
   $donations = $donateStorage->loadByProperties(['user_id' => $aid]);
   return $donations;
 }
-
