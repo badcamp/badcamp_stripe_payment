@@ -115,8 +115,7 @@ function badcamp_stripe_register_redirect_submit(&$form, FormStateInterface &$fo
   //get the user
   $account = User::load(\Drupal::currentUser()->id());
   // get donations
-  $DSub = new DonateRedirectSubscriber;
-  $donations = $DSub->_get_donations($account->id());
+  $donations = badcamp_stripe_payment_get_donations($account->id());
   //Take them to donations page if they have none. Which should normally be the
   //case.
   if (count($donations) < 1) {
